@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 부트스트랩 CSS 설치 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+    <!-- 제이쿼리 설치 -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- 부트스트랩 JS 설치 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <!-- 폰트 가져오기 -->
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet" />
+
+    <title>선착순 공동구매</title>
+
+    <!-- CSS 영역 -->
+    <style>
+        * {
+            font-family: "Gowun Batang", serif;
+            color: white;
+        }
+
+        body {
+            background-image: linear-gradient(0deg,
+                    rgba(0, 0, 0, 0.5),
+                    rgba(0, 0, 0, 0.5)),
+                url("https://cdn.aitimes.com/news/photo/202010/132592_129694_3139.jpg");
+            background-position: center;
+            background-size: cover;
+        }
+
+        h1 {
+            font-weight: bold;
+        }
+
+        .order {
+            width: 500px;
+            margin: 60px auto 0px auto;
+            padding-bottom: 60px;
+        }
+
+        .mybtn {
+            width: 100%;
+        }
+
+        .order>table {
+            margin: 40px 0;
+            font-size: 18px;
+        }
+
+        option {
+            color: black;
+        }
+    </style>
+
+    <!-- JS 영역 -->
+    <script>
+        // 페이지 열리자마자 실행되는 코드
+        $(document).ready(function () {
+            show_order();
+        });
+        // 사용자가 입력한 정보 페이지에 추가해주기
+        function show_order() {
+            fetch('/mars').then((res) => res.json()).then((data) => {
+                // 백엔드에서 'result' 받기 - db에서 marsData 가져오는 것
+                let rows = data['result']
+
+                $('#order-box').empty()
+
+                rows.forEach((i) => {
+                    let name = i['name']
+                    let address = i['address']
+                    let size = i['size']
+
+                    let temp_html = `
+                        <tr>
+                            <td> ${name} </td>
+                            <td> ${address} </td>
+                            <td> ${size} </td>
+                        </tr>
+                    `
+                    $('#order-box').append(temp_html)
+                })
+            })
+        }
+        function save_order() {
+            // 사용자가 입력한 정보를 각각의 택배 상자에 담는다. 
+            // 제이쿼리 이용. 'name' id에 input된 값 가져오기. 
+            let name = $('#name').val();
+            let address = $('#address').val();
+            let size = $('#size').val();
+
+
+            let formData = new FormData();
+            // 사용자가 입력한 데이터를, 각 택배원이 받아서 -> formData라는 트럭에 태움 
+            formData.append("name_give", name);
+            formData.append("address_give", address);
+            formData.append("size_give", size);
+
+            // formDa a에 담긴 걸 -> POST 방식으로 -> /mars (백엔드 영역)에 전송 
+            fetch('/mars', { method: "POST", body: formData }).then((res) => res.json()).then((message) => {
+
+                // 딕셔너리 메세지 중 내용물 꺼내서 보여주기
+                alert(message["msg"]);
+                // 홈페이지 새로고침 설정
+                window.location.reload();
+            });
+        }
+    </script>
+</head>
+
+<!-- HTML 영역 -->
+
+<body>
+    <div class="mask"></div>
+    <div class="order">
+        <h1>Real Asset Ordering System</h1>
+        <h3>Wherever you want</h3>
+        <p>
+            신청자 대기 명단에 등록하세요<br />
+            주문하기 버튼을 클릭하세요
+        </p>
+        <div class="order-info">
+            <div class="input-group mb-3">
+                <span class="input-group-text">이름</span>
+                <input id="name" type="text" class="form-control" />
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">주소</span>
+                <input id="address" type="text" class="form-control" />
+            </div>
+            <div class="input-group mb-3">
+                <label class="input-group-text" for="size">평수</label>
+                <select class="form-select" id="size">
+                    <option selected>-- 주문 평수 --</option>
+                    <option value="10평">10평</option>
+                    <option value="20평">20평</option>
+                    <option value="30평">30평</option>
+                    <option value="40평">40평</option>
+                    <option value="50평">50평</option>
+                </select>
+            </div>
+            <button onclick="save_order()" type="button" class="btn btn-warning mybtn">
+                주문하기
+            </button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">이름</th>
+                    <th scope="col">주소</th>
+                    <th scope="col">평수</th>
+                </tr>
+            </thead>
+            <tbody id="order-box">
+                <tr>
+                    <td>홍길동</td>
+                    <td>서울시 용산구</td>
+                    <td>20평</td>
+                </tr>
+                <tr>
+                    <td>임꺽정</td>
+                    <td>부산시 동구</td>
+                    <td>10평</td>
+                </tr>
+                <tr>
+                    <td>세종대왕</td>
+                    <td>세종시 대왕구</td>
+                    <td>30평</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>
